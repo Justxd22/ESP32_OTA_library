@@ -93,7 +93,7 @@ const char* password = STAPSK;
 
 // Set your Static IP address
 IPAddress local_IP(192, 168, 30, 120);
-// Set your Gateway IP address
+// Set your Gatew ay IP address
 IPAddress gateway(192, 168, 30, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);   //optional
@@ -175,6 +175,7 @@ void LoadState(){
 }
 void connectToWiFi() {
   WiFi.mode(WIFI_STA);
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
   WiFi.begin(ssid, password);
   Serial.println();
   Serial.print("Connecting to ");
@@ -196,6 +197,7 @@ void connectToWiFi() {
 
 void connectToWiFiLOOP() {
   WiFi.mode(WIFI_STA);
+  if (WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
   WiFi.begin(ssid, password);
   Serial.println();
   Serial.print("Connecting to ");
@@ -629,32 +631,14 @@ void handleRoot() {
   html += "<iframe name='i' style='display:none'></iframe>\n";               // dirty hack to keep
   html += "</div>\n";
   html += "<br><br>\n";
-  for (int i = 0; i < 15; i++){
-  html += "&nbsp;";  }
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdr?cmdr=rest';\" >RESTART</button>";  // dirty call as href
-  html += "<br><br>\n";
-  for (int i = 0; i < 30; i++){
-  html += "&nbsp;";  }
-  // html += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-  //html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdl?cmdl=moto';\" >RUN MOTOR</button>";  // dirty call as href
-  //html += "<br><br>\n";
-  //for (int i = 0; i < 45; i++){
-  //html += "&nbsp;";  }
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdw?cmdw=data';\" >Dialy Report</button>";  // dirty call as href
-  html += "<br><br>\n";
-  for (int i = 0; i < 60; i++){
-  html += "&nbsp;";  }
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdf?cmdf=files';\" >FILES</button>";  // dirty call as href
-  html += "<br><br>\n";
-  for (int i = 0; i < 70; i++){
-  html += "&nbsp;";  }
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'moto';\" >MOTOR TIME</button>";  // dirty call as href
-  html += "<br><br>\n";
-  for (int i = 0; i < 85; i++){
-  html += "&nbsp;";  }
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'timer';\" >Stairs Control</button>";  // dirty call as href
-  html += "&nbsp;";
-  html += "<button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'update';\" >OTA UPDATE</button>";  // dirty call as href
+  html += "<table class='table' style='border-color: black;border: 4px solid;'><tr>";
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdr?cmdr=rest';\" >RESTART</button></td>";  // dirty call as href
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdw?cmdw=data';\" >Dialy Report</button></td>";  // dirty call as href
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'cmdf?cmdf=files';\" >FILES</button></td>";  // dirty call as href
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'moto';\" >MOTOR TIME</button></td>";  // dirty call as href
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'timer';\" >Stairs Control</button></td>";  // dirty call as href
+  html += "<td><button style='text-align:center;font-size:30px;font-weight:bold;color:black;' onclick = \"window.location.href = 'update';\" >OTA UPDATE</button></td>";  // dirty call as href
+  html += "</tr></table>";
   html += "</body>\n</html>";
   server.send(200, "text/html", html);
 }
