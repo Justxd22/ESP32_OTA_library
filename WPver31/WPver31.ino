@@ -92,7 +92,7 @@ const char* ssid = STASSID;
 const char* password = STAPSK;
 
 // Set your Static IP address
-//IPAddress local_IP(192, 168, 30, 120);
+IPAddress local_IP(192, 168, 30, 120);
 // Set your Gateway IP address
 IPAddress gateway(192, 168, 30, 1);
 IPAddress subnet(255, 255, 255, 0);
@@ -1537,6 +1537,7 @@ void setup() {
   pinMode(r4, OUTPUT);
   pinMode(r3, OUTPUT);
   pinMode(r2, OUTPUT);
+  pinMode(21, OUTPUT);
   pinMode(5, OUTPUT);
 
 
