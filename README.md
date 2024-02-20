@@ -3,4 +3,4 @@
 - Export compiled sketch from aurdino
 - run lzss.py
 - commit changes
-- ota link : `/WPver31.ota`
+- ota link : `https://raw.githubusercontent.com/Justxd22/ESP32_OTA_library/main/WPver31.ota`
