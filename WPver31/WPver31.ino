@@ -1660,8 +1660,8 @@ void setup() {
 
   if (!lastValues.empty()) {
     Mtime = lastValues[0].toInt();
-    Stair_Hour_ON = std::min(lastValues[2].toInt(), lastValues[3].toInt());
-    Stair_Hour_OFF = std::max(lastValues[2].toInt(), lastValues[3].toInt());
+    Stair_Hour_ON = lastValues[2].toInt();
+    Stair_Hour_OFF = lastValues[3].toInt();
     Stair_min_ON = lastValues[4].toInt();
     Stair_min_OFF = lastValues[5].toInt();
     Stair_PIN = lastValues[6].toInt();
