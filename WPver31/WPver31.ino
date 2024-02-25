@@ -82,8 +82,8 @@ bool    SPIFFS_present = false;
 #ifndef STASSID                        // either use an external .h file containing STASSID and STAPSK
                                     // or
 
-#define STASSID "AMGAD"
-#define STAPSK  "onTESTtwo"
+#define STASSID "SWPC"
+#define STAPSK  "SWPC6060"
 //#define STASSID "Recvi"
 //#define STAPSK  "W$@rPC!yz"
 #endif
