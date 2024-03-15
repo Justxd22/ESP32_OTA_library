@@ -84,6 +84,8 @@ bool    SPIFFS_present = false;
 
 #define STASSID "SWPC"
 #define STAPSK  "SWPC6060"
+// #define STASSID "XD"
+// #define STAPSK  "12312345"
 //#define STASSID "Recvi"
 //#define STAPSK  "W$@rPC!yz"
 #endif
@@ -136,6 +138,9 @@ int Stair_min_OFF = 30;
 int CHECKPOINT_time = 0;
 int CHECKPOINT_min = 0;
 int Stair_PIN = 33;
+int mON = 0;
+int mONTOTAL = 0;
+int olON = 0;
 String message = "";
 struct tm timeinfo;
 bool datasa = false;
@@ -145,6 +150,7 @@ bool MOverride = false;
 bool notfi = false;
 bool notfi1 = false;
 bool notfi2 = false;
+bool notfi3 = false;
 
 WebServer server(6060);
 
@@ -299,6 +305,7 @@ void saveCHECKPOINT (int notf) {
   dataLine += String(time)+",";
   dataLine += String(CHECKPOINT_time)+",";
   dataLine += String(CHECKPOINT_min)+",";
+  dataLine += String(mON)+",";
   if (file.println(dataLine)) {
     Serial.println("[CHECKPOINT] Data written successfully");
   } else {
@@ -328,7 +335,9 @@ void saveDataToFile() {
   dataLine += String(Stair_Hour_OFF)+",";  
   dataLine += String(Stair_min_ON)+",";
   dataLine += String(Stair_min_OFF)+",";
-  dataLine += String(Stair_PIN);
+  dataLine += String(Stair_PIN)+",";
+  dataLine += String(mON)+",";
+  dataLine += String(mONTOTAL);
   if (file.println(dataLine)) {
     Serial.println("Data written successfully");
   } else {
@@ -391,7 +400,7 @@ std::vector<String> lastcells() {
     values.push_back(lastLine.substring(startIndex));
 
     // Check if there are at least 9 values in the last line
-    if (values.size() >= 8) {
+    if (values.size() >= 10) {
       //lastValues.push_back(values[5]); // inT0
       //lastValues.push_back(values[6]); // inT1
       //lastValues.push_back(values[7]); // inT2
@@ -403,6 +412,8 @@ std::vector<String> lastcells() {
       lastValues.push_back(values[5]); // On min
       lastValues.push_back(values[6]); // Off min
       lastValues.push_back(values[7]); // PIN
+      lastValues.push_back(values[8]); // motor run times
+      lastValues.push_back(values[9]); // motor run times in month
     } else {
       Serial.println("Insufficient values in the last line.");
       Serial.println(values.size());
@@ -453,11 +464,12 @@ void loadCHECKPOINT() {
     values.push_back(lastLine.substring(startIndex));
 
     // Check if there are at least 9 values in the last line
-    if (values.size() >= 3) {
+    if (values.size() >= 4) {
       lastValues.push_back(values[0]); // DATE
       lastValues.push_back(values[1]); // Ttime
       lastValues.push_back(values[2]); // CHECKPOINT TIME
       lastValues.push_back(values[3]); // CHECKPOINT MIN
+      lastValues.push_back(values[4]); // motor run times
     } else {
       Serial.println("Insufficient values in the last line.");
       Serial.println(values.size());
@@ -469,6 +481,7 @@ void loadCHECKPOINT() {
       Ttime += lastValues[1].toInt();
       CHECKPOINT_time = lastValues[2].toInt();
       CHECKPOINT_min = lastValues[3].toInt();
+      mON = lastValues[4].toInt();
       notfit(8);
       
     }
@@ -537,7 +550,7 @@ void handleRoot() {
                 "<th>Status</th>\n"
                 "<th>Control</th>\n"
                 "<th>Total H/M</th>\n"
-                "<th>Total KW/M</th>\n"
+                "<th>Total KW/M</th>\n" 
                 "<th>KW Today</th>\n"
                 "</thead>\n"
                 "<tbody>\n";
@@ -576,9 +589,9 @@ void handleRoot() {
     html += "</td>";
 
 
-
-  html += "<td data-label='Total H/M'>" + String(time1 / 3600) + " H</td>";
-  html += "<td data-label='Total KW/M'>" + String(time1 * 0.92 / 3600.00) + " KW</td>";
+//##############################################
+  html += "<td data-label='Total H/M'>" + String(mON) + " times</td>";
+  html += "<td data-label='Total KW/M'>" + String(mONTOTAL) + " times<br>this month</td>";
   html += "<td data-label='KW Today'>" + String(time / 60) + "Min - " + String(time * 0.92 / 3600.00) + "KW</td>";
 
   // a row with Totals
@@ -595,7 +608,7 @@ void handleRoot() {
   html += "<div style='display:inline-block;margin:10px;width:200px;height:70px;border:1px solid black;background-color:" + color + ";'><p style='text-align:center;font-size:30px;font-weight:bold;color:black;'>" + "Motor "+ (digitalRead(b4) == LOW ? "Run" : "Stop") + "</p>\n";
   html += "</div></td>";
 
-
+// ################################################
   html += "<td data-label='Total H/M'>  ";
   html += sum / 3600 ;
   html += " H</td>";
@@ -665,6 +678,8 @@ void handleData()
                 "<th>MONTH-TIME</th>\n"
                 "<th>DAY-TIME</th>\n"
                 "<th>Motor-KW</th>\n"
+                "<th>Motor RUN TIMES</th>\n"
+                "<th>Motor RUN MONTH</th>\n"
                 "</thead>\n"
                 "<tbody>\n";
 
@@ -776,6 +791,8 @@ void handleData()
                          Serial.print(values.size()); 
                          html += "<td data-label='DAY-TIME'>" + String(timeInLetters(values[2].toInt())) + " </td>";
                          html += "<td data-label='Motor-KW'>" + String(values[1].toInt() * 0.92/60 ) + " </td>";
+                         html += "<td data-label='Motor RUN TIMES'>" + String(values[8].toInt()) + " </td>";
+                         html += "<td data-label='Motor RUN MONTH'>" + String(values[9].toInt()) + " </td>";
 
   }
  }
@@ -1454,15 +1471,16 @@ void OVERST() {
 void notfit(int m) {
   int time = Ttime;
   String tt = String(timeInLetters(time)); //.replace(" ", "%20");
-  String msg = "Starting up.......";
+  String msg = "Starting%20up.......";
   if (m == 1){msg = "Motor%20Running%20more%20than%2030mins,%0A%0ATotal%20Runtime%20Today:%20%20" + tt;}
   if (m == 2){msg = "Motor%20Running%20more%20than%2040mins,%0A%0ATotal%20Runtime%20Today:%20%20" + tt;}
   if (m == 3){msg = "Motor%20Running%20more%20than%201%20Hour,%0A%0ATotal%20Runtime%20Today:%20%20" + tt;}
-  if (m == 4){msg = "Stairs LED OFF";}
-  if (m == 5){msg = "Stairs LED ON";}
+  if (m == 4){msg = "Stairs%20LED%20OFF";}
+  if (m == 5){msg = "Stairs%20LED%20ON";}
   if (m == 6){msg = "Daily%20Report%0A%0ADate:%20" + String(timeinfo.tm_mday - 1) + "/" + String(timeinfo.tm_mon + 1) + "/" + String(timeinfo.tm_year + 1900) + "%0ATotal%20Run%20Time:%20" + tt;}
   if (m == 7){msg = "Saved%20Checkpoint%0A%0ADate:%20" + String(timeinfo.tm_mday) + "/" + String(timeinfo.tm_mon + 1) + "/" + String(timeinfo.tm_year + 1900) + "%0ATime%20Saved:%20" + tt;}
   if (m == 8){msg = "Loaded%20Time:%20" + tt;}
+  if (m == 9){msg = "Motor%20Unusual%20runtime%20:%20" + String(mON) + "%20times%20today";}
 
   String url = "http://tqwee.pythonanywhere.com/msg?msgt=";
   WiFiClient client;
@@ -1665,6 +1683,7 @@ void setup() {
     Stair_min_ON = lastValues[4].toInt();
     Stair_min_OFF = lastValues[5].toInt();
     Stair_PIN = lastValues[6].toInt();
+    mONTOTAL = lastValues[8].toInt();
   } else {
     Serial.println("No last values available.");
   }
@@ -1747,6 +1766,8 @@ void loop() {
 
   //Main motor run time
   if (digitalRead(r4) == HIGH && !ledOn){
+    mON += 1;
+    mONTOTAL += 1;
     ledOn = true;
     onTime = millis();
     tempTime = 0;
@@ -1789,6 +1810,19 @@ void loop() {
       notfi2 = true;
 
     }
+  }
+
+  if (mON > 50){
+    if (mON > olON && (mON - olON) >= 100){
+      notfit(9);
+      olON = mON;
+    }
+    else if (olON == 0 && !notfi3)
+    {
+      notfit(9);
+      notfi3 = true;
+    }
+    
   }
 
 
