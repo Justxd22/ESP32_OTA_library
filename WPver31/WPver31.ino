@@ -1509,7 +1509,7 @@ void espOTA(const char *url)
   {
     Serial.print  ("Arduino_ESP_OTA::download failed with error code ");
     Serial.println(ota_download);
-    message = "Arduino_ESP_OTA::download failed with error code";
+    message = "Arduino_ESP_OTA::download failed with error code" + String(ota_download);
     server.send(303, "text/text", message);
     return;
   }
