@@ -285,6 +285,11 @@ saveCHECKPOINT(1);
 delay(3000);
 ESP.restart();
 }
+void restnosave()
+{
+delay(3000);
+ESP.restart();
+}
 
 void restartWEB()
 {
@@ -823,10 +828,12 @@ void handleCommand() {
     Serial.println("D318 reset");
     Ttime = 0;
     Mtime = 0;
+    mON = 0;
   }
   else if (server.argName(0) == "cmdd" && server.arg(0) == "resetd") {            // the parameter which was sent to this server
     Serial.println("D275 reset");
     Ttime = 0; // reset all today's runtime counter
+    mON = 0;
           // reset separate today's runtime counter
     }
 
@@ -932,6 +939,7 @@ void checkRuntimeReset() {
     //separate.resetToday(); // to be checked if needed
     notfit(6);
     Ttime = 0;
+    mON = 0;
   }
 }
 
@@ -1520,6 +1528,7 @@ void espOTA(const char *url)
   }
 
   Serial.println("Performing a reset after which the bootloader will start the new firmware.");
+  saveCHECKPOINT(1);
   server.send(200, "text/text", "SUCCESS");
   delay(1000); /* Make sure the serial message gets out before the reset. */
   ota.reset();
@@ -1618,6 +1627,7 @@ void setup() {
   server.on("/moto", showTime);
   server.on("/timer", timer);
   server.on("/Setup_timer", Setup_timer);
+  server.on("/resetnosave", restnosave);
   server.on("/Stimer", Stimer);
   server.on("/OVERRIDE_STAIR", OVERST);
   server.on("/favicon.ico", handle204);
