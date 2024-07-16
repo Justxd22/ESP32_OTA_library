@@ -108,6 +108,9 @@ const char* ntpServer = "pool.ntp.org";
 const long gmtOffsetInSeconds = 7200;
 const int daylightOffsetInSeconds = 7200;
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, ntpServer);
+
 const char* fileNameFormat = "/%02d%04d.txt";
 
 unsigned long previousMillis = 0;  // Variable to store the previous time
@@ -122,10 +125,11 @@ String table1 = "<table><tr><th>Date</th><th>Runtime 1</th><th>Runtime 2</th><th
 
 int sum;
 int sumd;
+int utcplus = 3;
 
 String currentFileName;
 bool ledOn    = false;
-bool StairON    = false;
+bool StairON  = false;
 float onTime  = 0;
 float onTimeStair = 0;
 float tempTime = 0;
@@ -342,7 +346,8 @@ void saveDataToFile() {
   dataLine += String(Stair_min_OFF)+",";
   dataLine += String(Stair_PIN)+",";
   dataLine += String(mON)+",";
-  dataLine += String(mONTOTAL);
+  dataLine += String(mONTOTAL)+",";
+  dataLine += String(utcplus);
   if (file.println(dataLine)) {
     Serial.println("Data written successfully");
   } else {
@@ -405,7 +410,7 @@ std::vector<String> lastcells() {
     values.push_back(lastLine.substring(startIndex));
 
     // Check if there are at least 9 values in the last line
-    if (values.size() >= 10) {
+    if (values.size() >= 11) {
       //lastValues.push_back(values[5]); // inT0
       //lastValues.push_back(values[6]); // inT1
       //lastValues.push_back(values[7]); // inT2
@@ -419,6 +424,7 @@ std::vector<String> lastcells() {
       lastValues.push_back(values[7]); // PIN
       lastValues.push_back(values[8]); // motor run times
       lastValues.push_back(values[9]); // motor run times in month
+      lastValues.push_back(values[10]); // utc offset
     } else {
       Serial.println("Insufficient values in the last line.");
       Serial.println(values.size());
@@ -1417,7 +1423,15 @@ void Setup_timer() {
   html += "<br><br>";
   html += "<label for='PIN'>Control PIN:</label><select id='PIN'><option value='33'>33</option><option value='34'>34</option><option value='35'>35</option></select>";
   html += "<br><br>";
+  html += "<p>Current Checkpoint: " + String(CHECKPOINT_time) + ":" + String(CHECKPOINT_min);
+  html += "</p>\n";
+  html += "<br><br>";
   html += "<label for='time3'>Select Checkpoint:</label><input type='time' id='time3' onblur='convertTime3()'><p id='result3'></p>";
+  html += "<br><br>";
+  html += "<p>Current UTC offset: " + String(utcplus);
+  html += "</p>\n";
+  html += "<br><br>";
+  html += "<label for='time4'>Select UTC offset:</label><select id='time4'><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option></select>";
   html += "<br><br>";
   html += "<p>TIME: " + String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min) + ":" + String(timeinfo.tm_sec);
   html += "</p>\n";
@@ -1427,7 +1441,7 @@ void Setup_timer() {
   html += "function convertTime() {const selectedTime = document.getElementById('time').value; const [hours, minutes] = selectedTime.split(':'); let convertedHour = parseInt(hours, 10); const selectedAmPm = selectedTime.slice(-2).toUpperCase(); if (selectedAmPm === 'PM' && convertedHour !== 12) {convertedHour += 12;} else if (selectedAmPm === 'AM' && convertedHour === 12) {convertedHour = 0;} const convertedTime = String(convertedHour).padStart(2, '0'); const convertedmin = String(minutes).padStart(2, '0'); document.getElementById('result').innerText = convertedTime +':'+ convertedmin; document.getElementById('time').style.display = 'none'; document.getElementById('result').style.display = 'block';}";
   html += "function convertTime2() {const selectedTime = document.getElementById('time2').value; const [hours, minutes] = selectedTime.split(':'); let convertedHour = parseInt(hours, 10); const selectedAmPm = selectedTime.slice(-2).toUpperCase(); if (selectedAmPm === 'PM' && convertedHour !== 12) {convertedHour += 12;} else if (selectedAmPm === 'AM' && convertedHour === 12) {convertedHour = 0;} const convertedTime = String(convertedHour).padStart(2, '0'); const convertedmin = String(minutes).padStart(2, '0'); document.getElementById('result2').innerText = convertedTime +':'+ convertedmin; document.getElementById('time2').style.display = 'none'; document.getElementById('result2').style.display = 'block';}";
   html += "function convertTime3() {const selectedTime = document.getElementById('time3').value; const [hours, minutes] = selectedTime.split(':'); let convertedHour = parseInt(hours, 10); const selectedAmPm = selectedTime.slice(-2).toUpperCase(); if (selectedAmPm === 'PM' && convertedHour !== 12) {convertedHour += 12;} else if (selectedAmPm === 'AM' && convertedHour === 12) {convertedHour = 0;} const convertedTime = String(convertedHour).padStart(2, '0'); document.getElementById('result3').innerText = convertedTime + ':' + minutes; document.getElementById('time3').style.display = 'none'; document.getElementById('result3').style.display = 'block';}";
-  html += "function save() {let [h1, h3] = document.getElementById('result').innerText.split(':'); let [h2, h4] = document.getElementById('result2').innerText.split(':'); let h5 = document.getElementById('result3').innerText; let PIN = document.getElementById('PIN').value; let url = '/Stimer?' + 'h1=' + h1 + '&h2=' + h2 + '&h3=' + h3 + '&h4=' + h4 +  '&h5=' + h5 + '&PIN=' + PIN; if (h1=='0' | h2=='0' | h3=='0') {alert('Please Select time');} else {window.location.href = window.location.origin + url;}}";
+  html += "function save() {let [h1, h3] = document.getElementById('result').innerText.split(':'); let [h2, h4] = document.getElementById('result2').innerText.split(':'); let h5 = document.getElementById('result3').innerText; let PIN = document.getElementById('PIN').value; let UTC = document.getElementById('time4').value; let url = '/Stimer?' + 'h1=' + h1 + '&h2=' + h2 + '&h3=' + h3 + '&h4=' + h4 +  '&h5=' + h5 + '&PIN=' + PIN + '&utc=' + UTC; if (h1=='0' | h2=='0' | h3=='0') {alert('Please Select time');} else {window.location.href = window.location.origin + url;}}";
   html += "</script>";
   html += "</body>\n";
 
@@ -1446,10 +1460,12 @@ void Stimer() {
   CHECKPOINT_min = inputString.substring(indz + 1).toInt();
 
   Stair_PIN = atoi(server.arg(5).c_str());
+  utcplus = atoi(server.arg(6).c_str());
   // Alarm.alarmRepeat(Stair_Hour_OFF,Stair_min_OFF,0,MorningAlarm);  // 9:00am every day
   // Alarm.alarmRepeat(Stair_Hour_ON,Stair_min_ON,0,EveningAlarm);  // 19:00 -> 7:00pm every day
   saveDataToFile();
   saveCHECKPOINT(1);
+  setTIME();
 
   message = "SAVED SUCCESFULLY";
   server.sendHeader("Location", "/timer");
@@ -1497,6 +1513,21 @@ void notfit(int m) {
   int code = http.GET();
   Serial.println(code);
 
+}
+
+
+void setTIME(){
+  // Get the epoch time from NTP
+  unsigned long epochTime = timeClient.getEpochTime() + (utcplus * 60 * 60);
+
+  
+  // Set the ESP32's internal RTC 
+  struct timeval tv;
+  tv.tv_sec = epochTime;
+  tv.tv_usec = 0;
+  settimeofday(&tv, NULL);
+  // Set the time in TimeLib library
+  //setTime(epochTime);
 }
 
 void espOTA(const char *url)
@@ -1563,10 +1594,6 @@ void setup() {
     Serial.print(".");
   }
 
-
-  WiFiUDP ntpUDP;
-  NTPClient timeClient(ntpUDP, ntpServer, gmtOffsetInSeconds, daylightOffsetInSeconds);
-
   // Set ESP32 internal RTC from NTP
   timeClient.begin();
   timeClient.update();
@@ -1581,17 +1608,7 @@ void setup() {
     }
   }
 
-  // Get the epoch time from NTP
-  unsigned long epochTime = timeClient.getEpochTime();
-
-  
-  // Set the ESP32's internal RTC 
-  struct timeval tv;
-  tv.tv_sec = epochTime;
-  tv.tv_usec = 0;
-  settimeofday(&tv, NULL);
-  // Set the time in TimeLib library
-  //setTime(epochTime);
+  setTIME();
 
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time from internal RTC");
@@ -1694,11 +1711,15 @@ void setup() {
     Stair_min_OFF = lastValues[5].toInt();
     Stair_PIN = lastValues[6].toInt();
     mONTOTAL = lastValues[8].toInt();
+    utcplus = lastValues[9].toInt();
+    Serial.println("UTCCCPLUS");
+    Serial.println(utcplus);
   } else {
     Serial.println("No last values available.");
   }
 
   loadCHECKPOINT();
+  setTIME();
 
   Serial.println("Initializing OTA storage");
   if ((ota_err = ota.begin()) != Arduino_ESP32_OTA::Error::None)
