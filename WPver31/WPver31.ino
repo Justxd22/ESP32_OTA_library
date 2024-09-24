@@ -1565,6 +1565,16 @@ void espOTA(const char *url)
   ota.reset();
 }
 
+void checkSTAIRS(){
+  if ((timeinfo.tm_hour > Stair_Hour_ON && timeinfo.tm_hour < Stair_Hour_OFF)) {
+      if (digitalRead(Stair_PIN) == LOW){
+        digitalWrite(Stair_PIN, HIGH);
+        digitalWrite(r2, HIGH);
+        notfit(5);
+      }
+  }
+}
+
 void setup() {
   int value = 0;
   pinMode(test, OUTPUT);
@@ -1720,6 +1730,7 @@ void setup() {
 
   loadCHECKPOINT();
   setTIME();
+  checkSTAIRS();
 
   Serial.println("Initializing OTA storage");
   if ((ota_err = ota.begin()) != Arduino_ESP32_OTA::Error::None)
