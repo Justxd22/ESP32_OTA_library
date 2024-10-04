@@ -1566,9 +1566,18 @@ void espOTA(const char *url)
 }
 
 void checkSTAIRS(){
-  if ((timeinfo.tm_hour > Stair_Hour_ON && timeinfo.tm_hour < Stair_Hour_OFF)) {
-      if (digitalRead(Stair_PIN) == LOW){
-        digitalWrite(Stair_PIN, HIGH);
+  int currentHour = timeinfo.tm_hour;
+  int currentMinute = timeinfo.tm_min;
+
+  // Check if within the "ON" time range (handle the wrap around midnight)
+  bool withinOnRange = (currentHour > Stair_Hour_ON || 
+                       (currentHour == Stair_Hour_ON && currentMinute >= Stair_min_ON)) ||
+                      (currentHour < Stair_Hour_OFF || 
+                       (currentHour == Stair_Hour_OFF && currentMinute < Stair_min_OFF));
+
+  if (withinOnRange) {
+    if (digitalRead(Stair_PIN) == LOW) {
+        digitalWrite(Stair_PIN, HIGH);  // Turn the LED on
         digitalWrite(r2, HIGH);
         notfit(5);
       }
