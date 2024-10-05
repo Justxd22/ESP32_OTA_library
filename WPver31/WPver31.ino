@@ -1575,6 +1575,13 @@ void checkSTAIRS(){
                       (currentHour < Stair_Hour_OFF || 
                        (currentHour == Stair_Hour_OFF && currentMinute < Stair_min_OFF));
 
+  Serial.print("withinOnRange: ");
+  Serial.print(withinOnRange);
+  Serial.print(", currentHour: ");
+  Serial.print(currentHour);
+  Serial.print(", Stair_Hour_ON: ");
+  Serial.println(Stair_Hour_ON);
+
   if (withinOnRange) {
     if (digitalRead(Stair_PIN) == LOW) {
         digitalWrite(Stair_PIN, HIGH);  // Turn the LED on
@@ -1739,7 +1746,6 @@ void setup() {
 
   loadCHECKPOINT();
   setTIME();
-  checkSTAIRS();
 
   Serial.println("Initializing OTA storage");
   if ((ota_err = ota.begin()) != Arduino_ESP32_OTA::Error::None)
@@ -1757,6 +1763,7 @@ void setup() {
   digitalWrite(r3, LOW);
   digitalWrite(r2, LOW);
   notfit(0);
+  checkSTAIRS();
 
 
 }
