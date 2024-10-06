@@ -325,6 +325,47 @@ void saveCHECKPOINT (int notf) {
   if (notf){notfit(7);}
 }
 
+
+void saveUTC () {
+  File file = SPIFFS.open("/UTC", FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open UTC file for writing");
+    return;
+  }
+
+  String dataLine = String(utcplus);
+  if (file.println(dataLine)) {
+    Serial.println("[UTC] Data written successfully");
+  } else {
+    Serial.println("[UTC] Failed to write data to file");
+  }
+  file.close();
+}
+
+void loadUTC() {
+  Serial.println("UTC Recover");
+
+  File F = SPIFFS.open("/UTC", "r");
+  if (F) {
+    if (F.available()) {
+      String line = F.readStringUntil('\n');
+      
+      // Convert the value from the file (as a string) into an integer and store it in utcplus
+      utcplus = line.toInt();
+      Serial.print("[UTC] Loaded value: ");
+      Serial.println(utcplus);
+    } else {
+      Serial.println("[UTC] File is empty.");
+    }
+    F.close();
+  } else {
+    Serial.println("Failed to open UTC file for reading.");
+  }
+}
+
+
+
+
 void saveDataToFile() {
   //char fileName[20];
   //snprintf(fileName, sizeof(fileName), fileNameFormat, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
@@ -346,15 +387,14 @@ void saveDataToFile() {
   dataLine += String(Stair_min_OFF)+",";
   dataLine += String(Stair_PIN)+",";
   dataLine += String(mON)+",";
-  dataLine += String(mONTOTAL)+",";
-  dataLine += String(utcplus);
+  dataLine += String(mONTOTAL);
   if (file.println(dataLine)) {
     Serial.println("Data written successfully");
   } else {
     Serial.println("Failed to write data to file");
   }
   file.close();
-  }
+}
 
 std::vector<String> lastcells() {
   Serial.println("Last Cells FUNC");
@@ -410,7 +450,7 @@ std::vector<String> lastcells() {
     values.push_back(lastLine.substring(startIndex));
 
     // Check if there are at least 9 values in the last line
-    if (values.size() >= 11) {
+    if (values.size() >= 10) {
       //lastValues.push_back(values[5]); // inT0
       //lastValues.push_back(values[6]); // inT1
       //lastValues.push_back(values[7]); // inT2
@@ -424,7 +464,6 @@ std::vector<String> lastcells() {
       lastValues.push_back(values[7]); // PIN
       lastValues.push_back(values[8]); // motor run times
       lastValues.push_back(values[9]); // motor run times in month
-      lastValues.push_back(values[10]); // utc offset
     } else {
       Serial.println("Insufficient values in the last line.");
       Serial.println(values.size());
@@ -1463,6 +1502,7 @@ void Stimer() {
   utcplus = atoi(server.arg(6).c_str());
   // Alarm.alarmRepeat(Stair_Hour_OFF,Stair_min_OFF,0,MorningAlarm);  // 9:00am every day
   // Alarm.alarmRepeat(Stair_Hour_ON,Stair_min_ON,0,EveningAlarm);  // 19:00 -> 7:00pm every day
+  saveUTC();
   saveDataToFile();
   saveCHECKPOINT(1);
   setTIME();
@@ -1737,12 +1777,13 @@ void setup() {
     Stair_min_OFF = lastValues[5].toInt();
     Stair_PIN = lastValues[6].toInt();
     mONTOTAL = lastValues[8].toInt();
-    utcplus = lastValues[9].toInt();
-    Serial.println("UTCCCPLUS");
-    Serial.println(utcplus);
   } else {
     Serial.println("No last values available.");
   }
+
+  loadUTC();
+  Serial.println("UTCCCPLUS");
+  Serial.println(utcplus);
 
   loadCHECKPOINT();
   setTIME();
