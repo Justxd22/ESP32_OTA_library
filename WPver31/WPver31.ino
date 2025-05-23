@@ -1551,7 +1551,8 @@ void OVERST() {
 
 void notfit(int m) {
   int time = Ttime;
-  String tt = String(timeInLetters(time)); //.replace(" ", "%20");
+  String tt = timeInLetters(time);
+  tt.replace(" ", "%20");
   String msg = "Starting%20up.......";
   if (m == 1){msg = "Motor%20Running%20more%20than%2030mins,%0A%0ATotal%20Runtime%20Today:%20%20" + tt;}
   if (m == 2){msg = "Motor%20Running%20more%20than%2040mins,%0A%0ATotal%20Runtime%20Today:%20%20" + tt;}
